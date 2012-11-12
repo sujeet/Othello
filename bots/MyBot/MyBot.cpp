@@ -88,6 +88,64 @@ int MyBot::evaluate (const OthelloBoard & board)
                }
           }
      }
+     
+     Coin coin;
+     if (board.get (0,0) != EMPTY) {
+          if ((coin = board.get (0,1)) != EMPTY) {
+               if (coin == my_color) score += 15;
+               else score -= 15;
+          }
+          if ((coin = board.get (1,0)) != EMPTY) {
+               if (coin == my_color) score += 15;
+               else score -= 15;
+          }
+          if ((coin = board.get (1,1)) != EMPTY) {
+               if (coin == my_color) score += 35;
+               else score -= 35;
+          }
+     }
+     if (board.get (7,0) != EMPTY) {
+          if ((coin = board.get (6,0)) != EMPTY) {
+               if (coin == my_color) score += 15;
+               else score -= 15;
+          }
+          if ((coin = board.get (7,1)) != EMPTY) {
+               if (coin == my_color) score += 15;
+               else score -= 15;
+          }
+          if ((coin = board.get (6,1)) != EMPTY) {
+               if (coin == my_color) score += 35;
+               else score -= 35;
+          }
+     }
+     if (board.get (0,7) != EMPTY) {
+          if ((coin = board.get (0,6)) != EMPTY) {
+               if (coin == my_color) score += 15;
+               else score -= 15;
+          }
+          if ((coin = board.get (1,7)) != EMPTY) {
+               if (coin == my_color) score += 15;
+               else score -= 15;
+          }
+          if ((coin = board.get (1,6)) != EMPTY) {
+               if (coin == my_color) score += 35;
+               else score -= 35;
+          }
+     }
+     if (board.get (7,7) != EMPTY) {
+          if ((coin = board.get (6,7)) != EMPTY) {
+               if (coin == my_color) score += 15;
+               else score -= 15;
+          }
+          if ((coin = board.get (7,6)) != EMPTY) {
+               if (coin == my_color) score += 15;
+               else score -= 15;
+          }
+          if ((coin = board.get (6,6)) != EMPTY) {
+               if (coin == my_color) score += 35;
+               else score -= 35;
+          }
+     }
      return score;
      
                
