@@ -12,14 +12,25 @@
 
 #define MIN -1
 #define MAX 1
-#define OPPOSITE(X) -X
+#define OPPOSITE(X) (-X)
+#define get_extreme(X) ((X)*1073741824) // 1073741824 is 2^30
 // #define print_move(move) cout << (move).x << " " << (move).y << endl;
-#define print_move(move) 0;                     \
+#define print_move(move) 0;
 
 #define MAX_DEPTH 5
 
 using namespace std;
 using namespace Desdemona;
+
+int const weights [8][8] = 
+{{120, -20, 20,  5,  5, 20, -20, 120},
+ {-20, -40, -5, -5, -5, -5, -40, -20},
+ { 20,  -5, 15,  3,  3, 15,  -5,  20},
+ {  5,  -5,  3,  3,  3,  3,  -5,   5},
+ {  5,  -5,  3,  3,  3,  3,  -5,   5},
+ { 20,  -5, 15,  3,  3, 15,  -5,  20},
+ {-20, -40, -5, -5, -5, -5, -40, -20},
+ {120, -20, 20,  5,  5, 20, -20, 120}};
 
 class MinimaxResult 
 {
@@ -52,7 +63,8 @@ private:
      MinimaxResult mini_max (const OthelloBoard & board,
                              int min_or_max,
                              int depth,
-                             Turn turn);
+                             Turn turn,
+                             int best_so_far);
 };
 
 MyBot::MyBot( Turn turn )
@@ -62,12 +74,29 @@ MyBot::MyBot( Turn turn )
 
 int MyBot::evaluate (const OthelloBoard & board) 
 {
-     int score = (board.getBlackCount ()
-                  - board.getRedCount ());
-     if (this->turn == RED) {
-          score = -score;
+     Coin my_color = this->turn;
+     Coin opp_color = other (this->turn);
+     int i,j;
+     int score = 0;
+     for (i = 0; i < 8; ++i) {
+          for (j = 0; j < 8; ++j) {
+               if (board.get (i,j) == my_color) {
+                    score += weights [i][j];
+               }
+               else if (board.get (i,j) == opp_color) {
+                    score -= weights [i][j];
+               }
+          }
      }
      return score;
+     
+               
+     // int score = (board.getBlackCount ()
+     //              - board.getRedCount ());
+     // if (this->turn == RED) {
+     //      score = -score;
+     // }
+     // return score;
 }
 
 // min_or_max : can be either MIN or MAX
@@ -78,10 +107,14 @@ int MyBot::evaluate (const OthelloBoard & board)
 // turn       : Note that this might be different from this->turn
 //              this parameter denotes at this position of the board,
 //              who is going to make next turn.
+// best_so_far: By now, many of minimaxes at this depth would have finished.
+//              best_so_far is the best of these. (minimum in case of MIN
+//              and maximum in case of MAX).
 MinimaxResult MyBot::mini_max (const OthelloBoard & board,
                                int min_or_max,
                                int depth,
-                               Turn turn) 
+                               Turn turn,
+                               int best_so_far) 
 {
      // Leaf node due to depth.
      if (depth == 0) {
@@ -105,26 +138,38 @@ MinimaxResult MyBot::mini_max (const OthelloBoard & board,
           this->mini_max (test_board,
                           OPPOSITE (min_or_max),
                           depth - 1,
-                          other (turn)).value;
+                          other (turn),
+                          get_extreme (OPPOSITE (min_or_max))).value;
      Move best_move = *it;
      ++ it;
     
      for (; it != moves.end(); ++it) {
           OthelloBoard test_board (board);
           test_board.makeMove (turn, *it);
-          int minimax_value = this->mini_max (test_board,
-                                              OPPOSITE (min_or_max),
-                                              depth - 1,
-                                              other (turn)).value;
+          int minimax_value = this->mini_max (
+               test_board,
+               OPPOSITE (min_or_max),
+               depth - 1,
+               other (turn),
+               best_minimax_value_so_far
+          ).value;
  
           switch (min_or_max) {
           case MIN :
+               if (minimax_value <= best_so_far) {
+                    return MinimaxResult (*it,
+                                          minimax_value);
+               }
                if (minimax_value < best_minimax_value_so_far) {
                     best_minimax_value_so_far = minimax_value;
                     best_move = *it;
                }
                break;
           case MAX :
+               if (minimax_value >= best_so_far) {
+                    return MinimaxResult (*it,
+                                          minimax_value);
+               }
                if (minimax_value > best_minimax_value_so_far) {
                     best_minimax_value_so_far = minimax_value;
                     best_move = *it;
@@ -140,7 +185,8 @@ Move MyBot::play( const OthelloBoard& board )
      MinimaxResult result = this->mini_max (board,
                                             MAX,
                                             MAX_DEPTH,
-                                            this->turn);
+                                            this->turn,
+                                            get_extreme (MAX));
      return result.move;
 }
 
